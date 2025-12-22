@@ -2,14 +2,15 @@ import streamlit as st
 import database
 from streamlit_cookies_controller import CookieController
 import time
+from cookiemanager import CookieManager
 
 conn = database.ReceiptsDatabase()
-controller = CookieController()
+cookie_manager = CookieManager()
 time.sleep(1)
 
 def logout():
     if 'user' in st.session_state:
-        controller.remove("ReceiptsUserId")
+        cookie_manager.remove("ReceiptsUserId")
         del st.session_state['user']
     st.rerun()   
 
@@ -18,11 +19,17 @@ if 'database_init' in st.session_state:
     del st.session_state['database_init']
     
 if 'user' not in st.session_state:
-    user = controller.get("ReceiptsUserId")
+    user = cookie_manager.get("ReceiptsUserId")
     if user:
         st.session_state['user'] = user
 
-if 'user' not in st.session_state:
+# Get the image id
+image_id = st.query_params.get("image_id", None)
+if image_id:
+
+    pg = st.navigation([st.Page("pages/viewreceiptimage.py", title="View Image")])
+
+elif 'user' not in st.session_state:
       
     pg = st.navigation([st.Page("login.py", title="Login")])
 
@@ -38,6 +45,7 @@ else:
     pages = {
         "Receipts": [
             st.Page("addreceipt.py", title="Add receipt"),
+            st.Page("addphotoreceipt.py", title="Add photo receipt"),
             st.Page("viewreceipt.py", title="View unrecorded receipts"),
             st.Page("viewallreceipt.py", title="View all receipts")
         ],

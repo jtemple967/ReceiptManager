@@ -3,6 +3,7 @@ from sqlalchemy import text
 import os
 import hashlib
 import datetime
+from io import BytesIO
 
 class ReceiptsDatabase:
 
@@ -102,16 +103,53 @@ class ReceiptsDatabase:
                                     )
             s.commit()
 
+    def create_photo_receipt(self, image_var):
+        conn = self.database_connect()
+
+        sql_string = """insert into receipts (receipt_image, recorded, created_date, created_by)
+                                  values (:receipt_image, False, :created_date, :created_by)
+                                  """
+        with conn.session as s:
+            s.execute(text(sql_string),
+                                    params={"receipt_image":image_var, 
+                                            "created_date":datetime.datetime.now(),
+                                            "created_by":st.session_state.user
+                                    }
+                                    )
+            s.commit()
+
     def get_receipts(self, all_receipts=False):
         conn = self.database_connect()
         if all_receipts:
-            sql_string = """select id, payee, amount, receipt_date, category, recorded, created_date, created_by, modified_date, modified_by from receipts"""
+            sql_string = """select id, payee, amount, receipt_date, category,
+                            case when receipt_image is not null then '/?image_id=' || id else null end as image_id,
+                            recorded, created_date, created_by, modified_date, modified_by from receipts
+                            order by receipt_date, payee, amount"""
         else:
-            sql_string = """select id, False as selected, payee, amount, receipt_date, category, recorded, created_date, created_by from receipts
-                            where recorded = False"""            
+            sql_string = """select id, False as selected, payee, amount, receipt_date, category, 
+                            case when receipt_image is not null then '/?image_id=' || id else null end as image_id,
+                            recorded, created_date, created_by from receipts
+                            where recorded = False order by receipt_date, payee, amount"""            
         receipts = conn.query(sql_string,
                                 ttl=0)
         return receipts
+    
+    def get_receipt_image(self, record_id):
+        image_stream = None
+        conn = self.database_connect()
+        sql_string = """select receipt_image from receipts
+                        where id = :id"""
+        results = conn.query(sql_string,
+                                params={
+                                    "id":record_id
+                                },
+                                ttl=0)
+        
+        if len(results):
+            for row in results:
+                image_bytes = bytes(row[0], "utf-8")
+                image_stream = BytesIO(image_bytes)
+        return image_stream
     
     def mark_receipt_as_recorded(self, id):
         conn = self.database_connect()

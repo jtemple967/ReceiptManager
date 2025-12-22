@@ -2,6 +2,7 @@ import database
 import streamlit as st
 from streamlit_cookies_controller import CookieController
 import time
+from cookiemanager import CookieManager
 
 with st.form("Login"):
     user = st.text_input("User")
@@ -9,14 +10,15 @@ with st.form("Login"):
     submit_login = st.form_submit_button("Login")
 
     if submit_login:
+        cookie_manager = CookieManager()
         conn = database.ReceiptsDatabase()
         conn.database_connect()
-        controller = CookieController()
+
         time.sleep(1)
 
         uid = conn.verify_password(user, password)
         if uid:
-            controller.set("ReceiptsUserId",user)
+            cookie_manager.set("ReceiptsUserId",user)
             st.session_state['user'] = user
             st.rerun()
         else:
