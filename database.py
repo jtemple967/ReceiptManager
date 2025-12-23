@@ -145,10 +145,8 @@ class ReceiptsDatabase:
                                 },
                                 ttl=0)
         
-        if len(results):
-            for row in results:
-                image_bytes = bytes(row[0], "utf-8")
-                image_stream = BytesIO(image_bytes)
+        if results.shape[0] > 0:
+            image_stream = results.loc[0]['receipt_image']
         return image_stream
     
     def mark_receipt_as_recorded(self, id):
