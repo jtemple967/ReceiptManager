@@ -214,3 +214,16 @@ class ReceiptsDatabase:
             params=None
         users = conn.query(sql_string, params=params, ttl=0)
         return users
+    
+    def purge_recorded_transactions(self, number_days=90):
+        conn = self.database_connect()
+
+        with conn.session as s:
+
+            sql_string = "delete from receipts where recorded = True and current_timestamp - created_date >= :number_days"
+            results = s.execute(text(sql_string),
+                      params={"number_days":number_days}
+            )
+            s.commit()
+            
+            return results.rowcount

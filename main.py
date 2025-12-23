@@ -39,6 +39,7 @@ else:
     if st.session_state.user == "admin":
         user_pages.append(st.Page("listusers.py", title="List users"))
         user_pages.append(st.Page("adduser.py", title="Add user"))
+        user_pages.append(st.Page("cleanupreceipts.py", title="Clean up receipts"))
     user_pages.append(st.Page("changepassword.py", title="Change password"))
     user_pages.append(st.Page(logout, title="Logout"))
 
